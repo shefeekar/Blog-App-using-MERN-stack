@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  client:
+    image: shefeekar/blog-app-client:latest  # From Docker Hub
+    ports:
+      - "80:80"  # Map to port 80 for production
+    depends_on:
+      - server
+    networks:
+      - blog-net
+
+  server:
+    image: shefeekar/blog-app-server:latest  # From Docker Hub
+    environment:
+      MONGO_URI: "mongodb://root:example@mongo:27017/BlogApp?authSource=admin"
+    depends_on:
+      - mongo
+    networks:
+      - blog-net
+
+  mongo:
+    image: mongo:6.0
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: BlogApp
+    networks:
+      - blog-net
+
+volumes:
+  mongo_data:
+
+networks:
+  blog-net:
+    driver: bridge
