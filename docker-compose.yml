@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  client:
+    build: ./client
+    ports:
+      - "3000:80"
+    depends_on:
+      - server
+    networks:
+      - blog-net
+
+  server:
+    build: ./server
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://root:pass@mongo:27017/BlogApp?authSource=admin
+    depends_on:
+      - mongo
+    networks:
+      - blog-net
+
+  mongo:
+    image: mongo:8.0.8
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: pass
+      MONGO_INITDB_DATABASE: BlogApp
+    networks:
+      - blog-net
+
+volumes:
+  mongo-data:
+
+networks:
+  blog-net:
+    driver: bridge
