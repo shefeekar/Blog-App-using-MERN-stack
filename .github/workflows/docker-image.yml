@@ -1,10 +1,8 @@
-name: Build and Push Docker Images
+name: ci
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: [main]
 
 env:
   DOCKERHUB_USERNAME: shefeekar  # Replace with your Docker Hub username
@@ -12,36 +10,41 @@ env:
   SERVER_IMAGE: blog-app-server  # Backend image name
 
 jobs:
-  build-and-push:
+  docker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: ${{ vars.DOCKERHUB_USERNAME }}  # Use `secrets` if username is sensitive
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Build and Push Frontend (Client)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and Push Client (Frontend)
       - name: Build and Push Client Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
-          context: ./client
-          file: ./client/Dockerfile
+          context: ./client  # Path to client directory
+          file: ./client/Dockerfile  # Explicitly specify Dockerfile location
           push: true
           tags: |
             ${{ env.DOCKERHUB_USERNAME }}/${{ env.CLIENT_IMAGE }}:latest
             ${{ env.DOCKERHUB_USERNAME }}/${{ env.CLIENT_IMAGE }}:${{ github.sha }}
 
-      # Build and Push Backend (Server)
+      # Build and Push Server (Backend)
       - name: Build and Push Server Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
-          context: ./server
-          file: ./server/Dockerfile
+          context: ./server  # Path to server directory
+          file: ./server/Dockerfile  # Explicitly specify Dockerfile location
           push: true
           tags: |
             ${{ env.DOCKERHUB_USERNAME }}/${{ env.SERVER_IMAGE }}:latest
